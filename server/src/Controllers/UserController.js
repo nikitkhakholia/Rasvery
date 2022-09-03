@@ -32,9 +32,8 @@ exports.getUserById = (req, res, next, id) => {
 exports.signUp = async (req, res) => {
   const user = new User(req.body);
   if (req.body.session) {
-    user.siteId = req.site._id;
     !user.fname ? (user.fname = "Guest") : "";
-    user.password = ""+Math.floor(100000000 + Math.random() * 900000000) ;
+    user.password = "" + Math.floor(100000000 + Math.random() * 900000000);
     user.save((err, user) => {
       if (err) {
         if (err.code === 11000) {
@@ -82,9 +81,9 @@ exports.signUp = async (req, res) => {
             error: `Please check the OTP provided by you.`,
           });
         }
-        user.siteId = req.site._id;
         user.accessKey = Math.random().toString(36).substring(2, 12);
         user.lastLoginTime = new Date();
+        user.username = user.email ? user.email : user.mobile;
         user.save((err, user) => {
           if (err) {
             if (err.code === 11000) {
@@ -116,8 +115,7 @@ exports.signUp = async (req, res) => {
       .then((decodedToken) => {
         if (decodedToken.email_verified) {
           User.findOne({
-            siteId: req.site._id,
-            username: req.site._id + "~" + decodedToken.email,
+            username: decodedToken.email,
           }).exec((err, user) => {
             if (err) {
               return res.status(400).json({
@@ -143,7 +141,7 @@ exports.signUp = async (req, res) => {
                   process.env.SECRET,
                   {}
                 );
-                
+
                 UserService.cacheUser(user._id, req, (err) => {
                   if (!err) {
                     sendSigninResponse(req, res, user, token);
@@ -156,7 +154,6 @@ exports.signUp = async (req, res) => {
               });
             } else {
               var user1 = new User({
-                siteId: req.site._id,
                 fname: decodedToken.name,
                 email: decodedToken.email,
                 password: Math.random().toString(36).substring(2, 12),
@@ -308,7 +305,7 @@ exports.checkUserRole = (role) => {
 };
 exports.signIn = (req, res) => {
   const { email, mobile, firebaseId, password } = req.body;
-  const username = "" + req.site._id + "~" + (email ? email : mobile);
+  const username = email ? email : mobile;
   User.findOne({ username: username }, (err, user) => {
     if (err) {
       return res.status(400).json({
@@ -337,7 +334,7 @@ exports.signIn = (req, res) => {
           error: `${err.message}`,
         });
       }
-      
+
       UserService.cacheUser(u._id, req, (err) => {
         if (!err) {
           const token = jwt.sign({ salt: user.salt }, process.env.SECRET, {});
@@ -559,23 +556,23 @@ const sendSigninResponse = (req, res, user, token) => {
   return res.json({
     token,
     _id,
-      fname,
-      lname,
-      dob,
-      username,
-      mobile,
-      email,
-      roles,
-      gstNo,
-      firebaseId,
-      sessionId,
-      imageUrl,
-      accessKey,
-      lastLoginTime,
-      lastLoginDevice,
-      files,
-      address,
-      createdAt,
+    fname,
+    lname,
+    dob,
+    username,
+    mobile,
+    email,
+    roles,
+    gstNo,
+    firebaseId,
+    sessionId,
+    imageUrl,
+    accessKey,
+    lastLoginTime,
+    lastLoginDevice,
+    files,
+    address,
+    createdAt,
     updatedAt,
   });
 };
