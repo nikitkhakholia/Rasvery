@@ -1,13 +1,17 @@
-import React from "react";
-import { login } from "../Modals/apis";
+import React, { useContext } from "react";
+import AlertContext from "../../contexts/AlertContext";
+import { checkIfUserExists, generateOtp } from "../Modals/apis";
 
 export default function SignUp({ showSignUpModal, showLoginModal }) {
+  // context variables
+  const { addNewAlert } = useContext(AlertContext);
+
   return (
     <div
       className="tw-backdrop-blur-md tw-absolute tw-inset-0 tw-flex tw-justify-center tw-items-center"
       id="signup-modal"
     >
-      <div className="tw-w-96 md:tw-w-96 tw-shadow-xl tw-rounded-3xl">
+      <div className="tw-w-96 md:tw-w-96 tw-shadow-xl tw-rounded-3xl tw-bg-white">
         {/* modal header */}
         <div className="tw-relative tw-h-48 tw-bg-black tw-rounded-3xl">
           <svg
@@ -187,14 +191,52 @@ export default function SignUp({ showSignUpModal, showLoginModal }) {
 
                 // validated all correct
                 if (submit) {
-                  // login({
-                  //   email: email.value.trim(),
-                  //   password: password.value,
-                  // }).then((res) => {
-                  //   if (res && !res.status) {
-                  //     console.log(res);
-                  //   }
-                  // });
+                  // variable to store user data to be sent
+                  var data = {};
+                  // adding email or mobile based on check
+                  if (email.value.match(/^[0-9]{10}$/g)) {
+                    data.mobile = email.value.trim();
+                  } else {
+                    data.email = email.value.trim();
+                  }
+                  data.password = password.value;
+                  data.name = name.value;
+                  // check if the user is already registered
+                  checkIfUserExists(data).then((res) => {
+                    if (res && res.status == "ok") {
+                      //user not registered, generating otp
+                      generateOtp({ to: email.value }).then((res) => {
+                        if (res && res.status) {
+                          //otp generated
+                          addNewAlert({
+                            type: "success",
+                            data: "OTP sent successfully.",
+                          });
+                          // disabling existing inputs
+                          name.classList.add("tw-cursor-not-allowed")
+                          name.disabled=true
+
+                          email.classList.add("tw-cursor-not-allowed")
+                          email.disabled=true
+
+                          password.classList.add("tw-cursor-not-allowed")
+                          password.disabled=true
+                        } else {
+                          //otp not generated
+                          addNewAlert({
+                            type: "failure",
+                            data: "Failed to generate OTP. Please try later.",
+                          });
+                        }
+                      });
+                    } else {
+                      //user already registered
+                      addNewAlert({
+                        type: "failure",
+                        data: "You are already registered. Please try Logging in reset your password.",
+                      });
+                    }
+                  });
                 }
               }}
             >
@@ -206,11 +248,12 @@ export default function SignUp({ showSignUpModal, showLoginModal }) {
             Already have an account?
           </div>
 
-          <div className=" tw-text-sm tw-text-center tw-font-medium tw-text-black hover:tw-underline tw-cursor-pointer"
-          onClick={e=>{
-            showLoginModal(true)
-            showSignUpModal(false)
-          }}
+          <div
+            className=" tw-text-sm tw-text-center tw-font-medium tw-text-black hover:tw-underline tw-cursor-pointer"
+            onClick={(e) => {
+              showLoginModal(true);
+              showSignUpModal(false);
+            }}
           >
             Log in
           </div>

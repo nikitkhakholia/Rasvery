@@ -16,7 +16,7 @@ const router = express.Router();
 
 router.param("userId", getUserById);
 
-router.get("/checkNewEmailMobile", checkNewEmailMobile);
+router.post("/checkNewEmailMobile", checkNewEmailMobile);
 router.post("/user", signUp);
 router.post("/signin", signIn);
 router.put("/forgotPassword", userForgotPassword);

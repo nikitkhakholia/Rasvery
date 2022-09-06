@@ -1,12 +1,13 @@
 const Otp = require("../Models/Otp");
 const { sendEmail } = require("../Services/EmailService");
 const { sendSMS_TEXTLOCAL } = require("../Services/SMSService");
+
+// generate and send otp to users
 exports.generateOtp = async (req, res) => {
-  if (req.query.to) {
+  if (req.body.to) {
     Otp.findOneAndUpdate(
       {
-        siteId: req.site._id,
-        to: req.query.to,
+        to: req.body.to,
       },
       {
         $set: { otp: Math.floor(100000 + Math.random() * 900000) },
@@ -19,12 +20,14 @@ exports.generateOtp = async (req, res) => {
             error: "Failed to generate otp.",
           });
         }
+        //send email
         if (otp.to.match("^[\\w-\\.+]*[\\w-\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$")) {
-          var mail = null;
-          //email for dawaayi
-          if (req.site._id === 1) {
+          var mailSent = null;
+
+          mailSent = true; //temp bypass
+          if (false) {
             var mail = req.site.mails.find((u) => u.for === "cs");
-            mail = await sendEmail({
+            mailSent = await sendEmail({
               host: mail.host,
               port: mail.port,
               secure: mail.type,
@@ -57,24 +60,28 @@ exports.generateOtp = async (req, res) => {
               replyTo: "noreply@noreply.com",
             });
           }
-          if (mail) {
+          if (mailSent) {
             return res.json({ status: 1, message: "OTP sent successfully." });
           } else {
-            return res.json({ status: 0, message: "Failed." });
+            return res.status(400).json({ status: 0, message: "Failed." });
           }
         }
+        // send sms
         if (otp.to.match(/[0-9]{10}/)) {
-          var sms = await sendSMS_TEXTLOCAL({
-            message: `${otp.otp} is your One Time Password, valid for 30 minutes only. Please do not share your OTP with anyone. Thank you for shopping at dawaayi.com`,
-            smsTo: otp.to,
-            apiKey: req.site.smsService.find((s) => s.name === "TEXTLOCAL")
-              .apiKey,
-            sender1: req.site.smsService.find((s) => s.name === "TEXTLOCAL")
-              .senderId,
-            // unicode: 1,
-          });
+          var smsSent = false;
+          smsSent = true; //temp bypass
+          if (false) {
+            smsSent = await sendSMS_TEXTLOCAL({
+              message: `${otp.otp} is your One Time Password, valid for 30 minutes only. Please do not share your OTP with anyone. Thank you for shopping at dawaayi.com`,
+              smsTo: otp.to,
+              apiKey: req.site.smsService.find((s) => s.name === "TEXTLOCAL")
+                .apiKey,
+              sender1: req.site.smsService.find((s) => s.name === "TEXTLOCAL")
+                .senderId,
+              // unicode: 1,
+            });
+          }
           if (sms) {
-            // if (true) {
             return res.json({ status: 1, message: "OTP sent successfully." });
           } else {
             return res.status(400).json({
@@ -87,19 +94,19 @@ exports.generateOtp = async (req, res) => {
     );
   }
 };
-exports.verifyOtp = (req, res) => {
-  if (req.query.to) {
-    Otp.findOne({ to: req.query.to, siteId: req.site._id }, (err, doc) => {
-      if (req.query.otp == doc.otp) {
-        return res.json({
-          status: 1,
-          error: "Verified.",
-        });
-      }
-      return res.status(400).json({
-        status: 0,
-        error: "Failed to verify otp.",
-      });
-    });
-  }
-};
+// exports.verifyOtp = (req, res) => {
+//   if (req.query.to) {
+//     Otp.findOne({ to: req.query.to, siteId: req.site._id }, (err, doc) => {
+//       if (req.query.otp == doc.otp) {
+//         return res.json({
+//           status: 1,
+//           error: "Verified.",
+//         });
+//       }
+//       return res.status(400).json({
+//         status: 0,
+//         error: "Failed to verify otp.",
+//       });
+//     });
+//   }
+// };

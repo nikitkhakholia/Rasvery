@@ -16,7 +16,9 @@ root.render(
       {/* header component */}
       <Header />
       {/* various routes in the page */}
-      <Routes></Routes>
+      <Routes>
+        
+      </Routes>
     </AlertProvider>
   </BrowserRouter>
 );

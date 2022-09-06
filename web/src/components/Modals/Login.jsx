@@ -11,7 +11,7 @@ export default function Login({ showSignUpModal, showLoginModal }) {
       className="tw-backdrop-blur-md tw-absolute tw-inset-0 tw-flex tw-justify-center tw-items-center"
       id="login-modal"
     >
-      <div className="tw-w-96 md:tw-w-96 tw-shadow-xl tw-rounded-3xl">
+      <div className="tw-w-96 md:tw-w-96 tw-shadow-xl tw-rounded-3xl tw-bg-white">
         {/* modal header */}
         <div className="tw-relative tw-h-48 tw-bg-black tw-rounded-3xl">
           <svg
@@ -171,6 +171,7 @@ export default function Login({ showSignUpModal, showLoginModal }) {
                       email.value = "";
                       password.value = "";
                       // storing authentication token for future use
+                      // todo
                     }
                   });
                 }

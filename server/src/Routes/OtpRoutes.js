@@ -3,7 +3,7 @@ const { generateOtp, verifyOtp } = require("../Controllers/OtpController");
 
 const router = express.Router();
 
-router.get("/otp", generateOtp);
-router.get("/votp", verifyOtp);
+router.post("/otp", generateOtp);
+// router.get("/votp", verifyOtp);
 
 module.exports = router;

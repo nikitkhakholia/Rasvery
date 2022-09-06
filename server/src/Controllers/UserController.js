@@ -359,10 +359,12 @@ exports.isAuthenticated = (req, res, next) => {
   }
   next();
 };
+
+// checks if the user exists with the given mobile
 exports.checkNewEmailMobile = (req, res) => {
-  if (req.query.mobile) {
+  if (req.body.mobile) {
     User.findOne(
-      { siteId: req.site._id, mobile: req.query.mobile },
+      {mobile: req.body.mobile },
       (err, u) => {
         if (err) {
           return res.status(400).json({
@@ -374,8 +376,8 @@ exports.checkNewEmailMobile = (req, res) => {
       }
     );
   }
-  if (req.query.email) {
-    User.findOne({ siteId: req.site._id, email: req.query.email }, (err, u) => {
+  if (req.body.email) {
+    User.findOne({email: req.body.email }, (err, u) => {
       if (err) {
         return res.status(400).json({
           status: 0,
