@@ -4,6 +4,7 @@ import React, { useState } from "react";
 const AlertContext = React.createContext();
 
 export function AlertProvider({ children }) {
+  alert(1)
   // state variable to store alerts comming from other components 
   const [alerts, setAlerts] = useState([]);
 

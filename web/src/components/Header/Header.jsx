@@ -77,7 +77,7 @@ export default function Header() {
       )}
       {/* alerts area */}
       <div id="alerts" className="tw-absolute tw-right-0 tw-top-0 tw-max-w-sm">
-        {alerts.map((alert, i) => {
+        {alerts && alerts.map((alert, i) => {
           return alert.type === "success" ? (
             <AlertSuccess key={i}>{alert.data}</AlertSuccess>
           ) : (

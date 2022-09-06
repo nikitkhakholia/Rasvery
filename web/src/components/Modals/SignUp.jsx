@@ -203,7 +203,7 @@ export default function SignUp({ showSignUpModal, showLoginModal }) {
                   data.name = name.value;
                   // check if the user is already registered
                   checkIfUserExists(data).then((res) => {
-                    if (res && res.status == "ok") {
+                    if (res && res.status === "ok") {
                       //user not registered, generating otp
                       generateOtp({ to: email.value }).then((res) => {
                         if (res && res.status) {
