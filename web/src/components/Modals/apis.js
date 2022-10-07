@@ -41,7 +41,7 @@ export const generateOtp =(data)=>{
 
 
 export const signup = (data) => {
-  return fetch(`${API}signin`, {
+  return fetch(`${API}user`, {
     method: "POST",
     headers: {
       Accept: "application/json",

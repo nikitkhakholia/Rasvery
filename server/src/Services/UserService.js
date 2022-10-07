@@ -1,7 +1,7 @@
 const User = require("../Models/User");
 
 exports.cacheUser = (id, req, next) => {
-  User.findOne({ _id: id, siteId: req.site._id })
+  User.findOne({ _id: id })
     .select("-createdAt -updatedAt -__v")
     .exec((err, user) => {
       if (err || !user) {

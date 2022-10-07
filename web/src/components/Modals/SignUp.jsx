@@ -1,10 +1,12 @@
 import React, { useContext } from "react";
 import AlertContext from "../../contexts/AlertContext";
-import { checkIfUserExists, generateOtp } from "../Modals/apis";
+import FirebaseContext from "../../contexts/FirebaseContext";
+import { checkIfUserExists, generateOtp, signup } from "../Modals/apis";
 
 export default function SignUp({ showSignUpModal, showLoginModal }) {
   // context variables
   const { addNewAlert } = useContext(AlertContext);
+  const { openGooglePopup } = useContext(FirebaseContext);
 
   return (
     <div
@@ -48,7 +50,39 @@ export default function SignUp({ showSignUpModal, showLoginModal }) {
           <h4 className="tw-font-semibold tw-text-xl tw-text-center">
             Welcome to RàsBérry
           </h4>
-          <div className="tw-mt-6 tw-w-100 tw-m-1 tw-cursor-pointer tw-text-center tw-p-2 tw-rounded tw-border-black tw-border">
+          <div
+            className="tw-mt-6 tw-w-100 tw-m-1 tw-cursor-pointer tw-text-center tw-p-2 tw-rounded tw-border-black tw-border"
+            onClick={async (e) => {
+              const { user } = await openGooglePopup();
+              signup({ firebaseToken: user.idToken })
+                .then((res) => {
+                  console.log(res);
+                  if (res.status) {
+                    console.log(res);
+                    addNewAlert({
+                      type: "success",
+                      data: "Successfully Registered.",
+                    });
+                  } else {
+                    addNewAlert({
+                      type: "failure",
+                      data: res.error,
+                    });
+                  }
+                })
+                .catch((err) => {
+                  addNewAlert({
+                    type: "failure",
+                    data: (
+                      <p>
+                        Google Login Failed...
+                        <br /> Try Again Later...
+                      </p>
+                    ),
+                  });
+                });
+            }}
+          >
             Sign up with Google
           </div>
           <p className="tw-mt-6 tw-text-center">-or-</p>
@@ -213,14 +247,14 @@ export default function SignUp({ showSignUpModal, showLoginModal }) {
                             data: "OTP sent successfully.",
                           });
                           // disabling existing inputs
-                          name.classList.add("tw-cursor-not-allowed")
-                          name.disabled=true
+                          name.classList.add("tw-cursor-not-allowed");
+                          name.disabled = true;
 
-                          email.classList.add("tw-cursor-not-allowed")
-                          email.disabled=true
+                          email.classList.add("tw-cursor-not-allowed");
+                          email.disabled = true;
 
-                          password.classList.add("tw-cursor-not-allowed")
-                          password.disabled=true
+                          password.classList.add("tw-cursor-not-allowed");
+                          password.disabled = true;
                         } else {
                           //otp not generated
                           addNewAlert({

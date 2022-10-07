@@ -9,31 +9,43 @@ export default function Login({ showSignUpModal, showLoginModal }) {
   const { addNewAlert } = useContext(AlertContext);
   const { firebaseApp } = useContext(FirebaseContext);
 
-  // const provider = new GoogleAuthProvider();
-  // provider.addScope("profile");
+  const openGooglePopup = () => {
+    // google provider object
+    const googleAuthProvider = new GoogleAuthProvider();
 
-  // const auth = getAuth();
-  // signInWithPopup(auth, provider)
-  //   .then((result) => {
-  //     // This gives you a Google Access Token. You can use it to access the Google API.
-  //     const credential = GoogleAuthProvider.credentialFromResult(result);
-  //     const token = credential.accessToken;
-  //     // The signed-in user info.
-  //     const user = result.user;
-  //     console.log(user);
-  //     // ...
-  //   })
-  //   .catch((error) => {
-  //     // Handle Errors here.
-  //     const errorCode = error.code;
-  //     const errorMessage = error.message;
-  //     // The email of the user's account used.
-  //     const email = error.customData.email;
-  //     // The AuthCredential type that was used.
-  //     const credential = GoogleAuthProvider.credentialFromError(error);
-  //     console.log(credential);
-  //     // ...
-  //   });
+    // additional OAuth 2.0 scopes
+    // provider.addScope('openid');
+    // provider.addScope('profile');
+    // provider.addScope('image');
+
+    // creating auth object
+    const auth = getAuth();
+
+    // open popup
+    signInWithPopup(auth, googleAuthProvider)
+      .then((res) => {
+        // Google Access Token
+        const credential = GoogleAuthProvider.credentialFromResult(res);
+        // firebase token
+        const token = credential.accessToken;
+        // user info.
+        const user = res.user;
+        console.log(JSON.stringify(token));
+      })
+      .catch((error) => {
+        // const errorCode = error.code;
+        // const errorMessage = error.message;
+        // The email of the user's account used.
+        // const email = error.customData.email;
+        // The AuthCredential type that was used.
+        // const credential = GoogleAuthProvider.credentialFromError(error);
+        // console.log(errorCode);
+        // console.log(errorMessage);
+
+        addNewAlert({type:'failure', data:<p>Google Login Failed...<br/> Try Again Later...</p>})
+        
+      });
+  };
 
   return (
     <div
@@ -77,7 +89,7 @@ export default function Login({ showSignUpModal, showLoginModal }) {
           <h4 className="tw-font-semibold tw-text-xl tw-text-center">
             Welcome to RàsBérry
           </h4>
-          <div className="tw-mt-6 tw-w-100 tw-m-1 tw-cursor-pointer tw-text-center tw-p-2 tw-rounded tw-border-black tw-border">
+          <div className="tw-mt-6 tw-w-100 tw-m-1 tw-cursor-pointer tw-text-center tw-p-2 tw-rounded tw-border-black tw-border" onClick={openGooglePopup}>
             Log in with Google
           </div>
           <p className="tw-mt-6 tw-text-center">-or-</p>

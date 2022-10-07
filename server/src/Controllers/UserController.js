@@ -109,7 +109,7 @@ exports.signUp = async (req, res) => {
     );
   }
   if (req.body.firebaseToken) {
-    Firebase(req.site.name)
+    Firebase()
       .auth()
       .verifyIdToken(req.body.firebaseToken)
       .then((decodedToken) => {
@@ -124,38 +124,39 @@ exports.signUp = async (req, res) => {
               });
             }
             if (user) {
-              user.firebaseId = decodedToken.uid;
-              user.fname = decodedToken.name;
-              user.imageUrl = decodedToken.picture;
-              user.accessKey = Math.random().toString(36).substring(2, 12);
-              user.lastLoginTime = new Date();
-              user.save((err, user) => {
-                if (err) {
+              // user.firebaseId = decodedToken.uid;
+              // user.fname = decodedToken.name;
+              // user.imageUrl = decodedToken.picture;
+              // user.accessKey = Math.random().toString(36).substring(2, 12);
+              // user.lastLoginTime = new Date();
+              // user.save((err, user) => {
+              //   if (err) {
                   return res.status(400).json({
                     status: 0,
-                    error: `Internal Error 04. Please contact Support.`,
+                    error: `Already Registered. Please Sign In.`,
                   });
-                }
-                const token = jwt.sign(
-                  { salt: user.salt },
-                  process.env.SECRET,
-                  {}
-                );
+              //   }
+                // const token = jwt.sign(
+                //   { salt: user.salt },
+                //   process.env.SECRET,
+                //   {}
+                // );
 
-                UserService.cacheUser(user._id, req, (err) => {
-                  if (!err) {
-                    sendSigninResponse(req, res, user, token);
-                  } else {
-                    return res.json({
-                      err,
-                    });
-                  }
-                });
-              });
+                // UserService.cacheUser(user._id, req, (err) => {
+                //   if (!err) {
+                //     sendSigninResponse(req, res, user, token);
+                //   } else {
+                //     return res.json({
+                //       err,
+                //     });
+                //   }
+                // });
+              // });
             } else {
               var user1 = new User({
                 fname: decodedToken.name,
                 email: decodedToken.email,
+                username: decodedToken.email,
                 password: Math.random().toString(36).substring(2, 12),
                 firebaseId: decodedToken.uid,
                 imageUrl: decodedToken.picture,
@@ -163,6 +164,7 @@ exports.signUp = async (req, res) => {
                 lastLoginTime: new Date(),
               });
               user1.save((err, user) => {
+                console.log(err);
                 if (err) {
                   return res.status(400).json({
                     status: 0,
@@ -174,47 +176,10 @@ exports.signUp = async (req, res) => {
                   process.env.SECRET,
                   {}
                 );
-                const {
-                  _id,
-                  roles,
-                  fname,
-                  lname,
-                  mobile,
-                  email,
-                  firebaseId,
-                  accessKey,
-                  lastLoginTime,
-                  dob,
-                  username,
-                  gstNo,
-                  sessionId,
-                  files,
-                  address,
-                  createdAt,
-                  updatedAt,
-                } = user;
+                
                 UserService.cacheUser(user._id, req, (err) => {
                   if (!err) {
-                    return res.json({
-                      token,
-                      _id,
-                      roles,
-                      fname,
-                      lname,
-                      mobile,
-                      email,
-                      firebaseId,
-                      accessKey,
-                      lastLoginTime,
-                      dob,
-                      username,
-                      gstNo,
-                      sessionId,
-                      files,
-                      address,
-                      createdAt,
-                      updatedAt,
-                    });
+                    sendSigninResponse(req, res, user, token);
                   } else {
                     return res.json({
                       err,
@@ -304,8 +269,23 @@ exports.checkUserRole = (role) => {
   };
 };
 exports.signIn = (req, res) => {
-  const { email, mobile, firebaseId, password } = req.body;
-  const username = email ? email : mobile;
+  const { email, mobile, password, fToken } = req.body;
+  if (!password && !fToken) {
+    return res.status(400).json({
+      status: 0,
+      error: `Invalid Request`,
+    });
+  }
+  let username = email ? email : mobile;
+  if (fToken) {
+    Firebase()
+      .auth()
+      .verifyIdToken(fToken)
+      .then((decodedToken) => {
+        username = decodedToken.email_verified ? decodedToken.email : null;
+      });
+  }
+
   User.findOne({ username: username }, (err, user) => {
     if (err) {
       return res.status(400).json({
@@ -319,11 +299,14 @@ exports.signIn = (req, res) => {
         error: `Please Register First.`,
       });
     }
-    if (!user.authenticate(password)) {
-      return res.status(400).json({
-        status: 0,
-        error: `Please check your email or password.`,
-      });
+
+    if (password) {
+      if (!user.authenticate(password)) {
+        return res.status(400).json({
+          status: 0,
+          error: `Please check your email or password.`,
+        });
+      }
     }
 
     user.accessKey = Math.random().toString(36).substring(2, 12);
@@ -363,21 +346,18 @@ exports.isAuthenticated = (req, res, next) => {
 // checks if the user exists with the given mobile
 exports.checkNewEmailMobile = (req, res) => {
   if (req.body.mobile) {
-    User.findOne(
-      {mobile: req.body.mobile },
-      (err, u) => {
-        if (err) {
-          return res.status(400).json({
-            status: 0,
-            error: `${err.message}`,
-          });
-        }
-        res.json({ status: u ? "registered" : "ok" });
+    User.findOne({ mobile: req.body.mobile }, (err, u) => {
+      if (err) {
+        return res.status(400).json({
+          status: 0,
+          error: `${err.message}`,
+        });
       }
-    );
+      res.json({ status: u ? "registered" : "ok" });
+    });
   }
   if (req.body.email) {
-    User.findOne({email: req.body.email }, (err, u) => {
+    User.findOne({ email: req.body.email }, (err, u) => {
       if (err) {
         return res.status(400).json({
           status: 0,
@@ -556,6 +536,7 @@ const sendSigninResponse = (req, res, user, token) => {
   } = user;
 
   return res.json({
+    status:1,
     token,
     _id,
     fname,
